@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Breaks - Fiserv LATAM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .team-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .member-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .member-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .on-break {
+            color: green;
+        }
+        .overdue {
+            color: red;
+        }
+        .break-info {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .break-controls {
+            margin-top: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.short-break {
+            background-color: #2196F3;
+        }
+        button.short-break:hover {
+            background-color: #0b7dda;
+        }
+        button.end-break {
+            background-color: #f44336;
+        }
+        button.end-break:hover {
+            background-color: #d32f2f;
+        }
+        .status {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .available {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Controle de Breaks - Fiserv LATAM</h1>
+    
+    <div class="team-container" id="teamContainer">
+        <!-- Membros da equipe serão gerados aqui -->
+    </div>
+
+    <script>
+        // Dados da equipe
+        const teamMembers = [
+            { id: 1, name: "Ana", onBreak: false, breakType: null, breakStart: null },
+            { id: 2, name: "Brenda", onBreak: false, breakType: null, breakStart: null },
+            { id: 3, name: "Franco", onBreak: false, breakType: null, breakStart: null },
+            { id: 4, name: "Henry", onBreak: false, breakType: null, breakStart: null },
+            { id: 5, name: "Jahn", onBreak: false, breakType: null, breakStart: null },
+            { id: 6, name: "Lauren", onBreak: false, breakType: null, breakStart: null },
+            { id: 7, name: "Luiz", onBreak: false, breakType: null, breakStart: null },
+            { id: 8, name: "Ester", onBreak: false, breakType: null, breakStart: null },
+            { id: 9, name: "Mariangela", onBreak: false, breakType: null, breakStart: null },
+            { id: 10, name: "Murilo", onBreak: false, breakType: null, breakStart: null },
+            { id: 11, name: "Pedro", onBreak: false, breakType: null, breakStart: null },
+            { id: 12, name: "Vinicius", onBreak: false, breakType: null, breakStart: null }
+        ];
+
+        // Constantes de tempo (em milissegundos)
+        const LUNCH_BREAK_DURATION = 60 * 60 * 1000; // 60 minutos
+        const SHORT_BREAK_DURATION = 15 * 60 * 1000; // 15 minutos
+
+        // Inicializa a interface
+        function initInterface() {
+            const container = document.getElementById('teamContainer');
+            
+            teamMembers.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'member-card';
+                card.id = `member-${member.id}`;
+                
+                const nameElement = document.createElement('div');
+                nameElement.className = 'member-name';
+                nameElement.textContent = member.name;
+                
+                const statusElement = document.createElement('div');
+                statusElement.className = 'status available';
+                statusElement.textContent = 'Disponível';
+                
+                const breakInfoElement = document.createElement('div');
+                breakInfoElement.className = 'break-info';
+                breakInfoElement.textContent = '';
+                
+                const controlsElement = document.createElement('div');
+                controlsElement.className = 'break-controls';
+                
+                const lunchButton = document.createElement('button');
+                lunchButton.textContent = 'Almoço';
+                lunchButton.onclick = () => startBreak(member.id, 'lunch');
+                
+                const shortButton = document.createElement('button');
+                shortButton.textContent = 'Short Break';
+                shortButton.className = 'short-break';
+                shortButton.onclick = () => startBreak(member.id, 'short');
+                
+                const endButton = document.createElement('button');
+                endButton.textContent = 'Encerrar';
+                endButton.className = 'end-break';
+                endButton.onclick = () => endBreak(member.id);
+                endButton.style.display = 'none';
+                
+                controlsElement.appendChild(lunchButton);
+                controlsElement.appendChild(shortButton);
+                controlsElement.appendChild(endButton);
+                
+                card.appendChild(nameElement);
+                card.appendChild(statusElement);
+                card.appendChild(breakInfoElement);
+                card.appendChild(controlsElement);
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Inicia um break
+        function startBreak(memberId, breakType) {
+            const member = teamMembers.find(m => m.id === memberId);
+            if (!member || member.onBreak) return;
+            
+            member.onBreak = true;
+            member.breakType = breakType;
+            member.breakStart = new Date();
+            
+            updateMemberCard(member);
+        }
+
+        // Encerra um break
+        function endBreak(memberId) {
+            const member = teamMembers.find(m => m.id === memberId);
+            if (!member || !member.onBreak) return;
+            
+            member.onBreak = false;
+            member.breakType = null;
+            member.breakStart = null;
+            
+            updateMemberCard(member);
+        }
+
+        // Atualiza o card do membro
+        function updateMemberCard(member) {
+            const card = document.getElementById(`member-${member.id}`);
+            if (!card) return;
+            
+            const nameElement = card.querySelector('.member-name');
+            const statusElement = card.querySelector('.status');
+            const breakInfoElement = card.querySelector('.break-info');
+            const controlsElement = card.querySelector('.break-controls');
+            const lunchButton = controlsElement.querySelector('button:not(.short-break):not(.end-break)');
+            const shortButton = controlsElement.querySelector('.short-break');
+            const endButton = controlsElement.querySelector('.end-break');
+            
+            if (member.onBreak) {
+                // Configuração para membro em break
+                nameElement.classList.add('on-break');
+                nameElement.classList.remove('overdue');
+                
+                const breakText = member.breakType === 'lunch' ? 'Almoço' : 'Short Break';
+                statusElement.textContent = `Em ${breakText}`;
+                statusElement.classList.remove('available');
+                
+                lunchButton.style.display = 'none';
+                shortButton.style.display = 'none';
+                endButton.style.display = 'inline-block';
+                
+                // Atualiza o timer em tempo real
+                updateBreakTimer(member);
+            } else {
+                // Configuração para membro disponível
+                nameElement.classList.remove('on-break', 'overdue');
+                statusElement.textContent = 'Disponível';
+                statusElement.classList.add('available');
+                breakInfoElement.textContent = '';
+                
+                lunchButton.style.display = 'inline-block';
+                shortButton.style.display = 'inline-block';
+                endButton.style.display = 'none';
+            }
+        }
+
+        // Atualiza o timer do break
+        function updateBreakTimer(member) {
+            const card = document.getElementById(`member-${member.id}`);
+            if (!card || !member.onBreak) return;
+            
+            const breakInfoElement = card.querySelector('.break-info');
+            const nameElement = card.querySelector('.member-name');
+            
+            const now = new Date();
+            const breakDuration = member.breakType === 'lunch' ? LUNCH_BREAK_DURATION : SHORT_BREAK_DURATION;
+            const elapsed = now - member.breakStart;
+            const remaining = breakDuration - elapsed;
+            
+            // Verifica se o break está dentro do prazo
+            if (remaining > 0) {
+                nameElement.classList.add('on-break');
+                nameElement.classList.remove('overdue');
+                
+                // Formata o tempo restante
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                breakInfoElement.textContent = `Tempo restante: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                // Break vencido
+                nameElement.classList.remove('on-break');
+                nameElement.classList.add('overdue');
+                
+                const overdueMinutes = Math.floor(-remaining / 60000);
+                const overdueSeconds = Math.floor((-remaining % 60000) / 1000);
+                breakInfoElement.textContent = `Atrasado: +${overdueMinutes}:${overdueSeconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Agenda a próxima atualização
+            setTimeout(() => updateBreakTimer(member), 1000);
+        }
+
+        // Inicializa o aplicativo quando a página carregar
+        window.onload = function() {
+            initInterface();
+        };
+    </script>
+</body>
+</html>
